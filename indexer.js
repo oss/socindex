@@ -17,6 +17,8 @@ function capitalize (text) {
   return text.trim().toLowerCase().split(' ').map(function (item) {
     if (item == 'ii' || item == 'i' || item == 'iii' || item == 'iv') return item.toUpperCase();
 
+    // TODO: about a million other english oddities and other edge cases
+
     if (item != 'and') {
       if (item) return item[0].toUpperCase() + item.slice(1);
       else return '';
@@ -65,6 +67,8 @@ function index (callback) {
     } catch (e) { callback(e); }
   });
 }
+
+module.exports = index;
 
 if (require.main === module) {
   index(function (err, data) {
