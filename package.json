@@ -1,0 +1,23 @@
+{
+  "name": "ru-soc-index",
+  "version": "0.0.0",
+  "description": "indexer and autocompletion tools for Rutgers SOC data",
+  "main": "test.js",
+  "dependencies": {
+    "keypress": "~0.1.0",
+    "charm": "~0.1.0",
+    "request": "~2.12.0",
+    "lodash": "~1.0.0-rc.3",
+    "async": "~0.1.22"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/russfrank/ru-soc-index"
+  },
+  "author": "Russ Frank",
+  "license": "MIT"
+}
