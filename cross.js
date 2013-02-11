@@ -23,10 +23,10 @@ function forCross() {
     fn = args.pop();
   }
 
-  return _.reduce(cross(args), function (memo, item) {
+  return _.reduce(cross.apply(null, args), function (memo, item) {
     memo.push(fn.apply(binding, item));
     return memo;
-  });
+  }, []);
 }
 
 exports.cross = cross;
