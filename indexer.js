@@ -5,7 +5,7 @@ var fs = require('fs');
 var moment = require('moment');
 var autocomplete = require('./autocomplete');
 var EventEmitter = require('events').EventEmitter;
-var cross = require('cross');
+var cross = require('./cross');
 
 //var url = "http://sis.rutgers.edu/soc/subjects.json?semester=12013&campus=NB&level=U";
 var url = "http://sis.rutgers.edu/soc/subjects.json?semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
