@@ -2,9 +2,22 @@ var request = require('request');
 var async = require('async');
 var _ = require('lodash');
 var fs = require('fs');
+var moment = require('moment');
+var autocomplete = require('./autocomplete');
+var EventEmitter = require('events').EventEmitter;
+var cross = require('cross');
 
-var url = "http://sis.rutgers.edu/soc/subjects.json?semester=12013&campus=NB&level=U";
-var subj = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=12013&campus=NB&level=U";
+//var url = "http://sis.rutgers.edu/soc/subjects.json?semester=12013&campus=NB&level=U";
+var url = "http://sis.rutgers.edu/soc/subjects.json?semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
+var subj = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
+
+// Number is the month they start in
+//  winter: 0
+//  spring: 1
+//  summer: 7
+//  fall: 9
+
+var campuses = ['NB', 'NK', 'CM', 'ONLINE', 'WM', 'AC', 'MC', 'J', 'RV', 'CC', 'CU'];
 
 function titleToAbbrev (title) {
   return title.split(' ').reduce(function (memo, item) {
@@ -26,16 +39,28 @@ function capitalize (text) {
   }).join(' ');
 }
 
-function index (callback) {
-  request(url, function (err, res, body) {
+function index (semester, campus, level, callback) {
+  var myUrl = url
+    .replace('$SEMESTER', semester) 
+    .replace('$CAMPUS', campus)
+    .replace('$LEVEL', level);
+
+  request(myUrl, function (err, res, body) {
+    console.log("Retrieved:", myUrl);
     try {
       if (err) throw err;
       var data = JSON.parse(body);
       var base = {ids: {}, names: {}, abbrevs: {}, courses: {}};
 
       async.reduce(data, base, function (memo, item, callback) {
+        
+        var subjUrl = subj
+          .replace('$SEMESTER', semester) 
+          .replace('$CAMPUS', campus)
+          .replace('$LEVEL', level)
+          .replace('$SUBJ', item.code);
 
-        request(subj.replace('$SUBJ', item.code), function (err, res, body) {
+        request(subjUrl, function (err, res, body) {
           try {
             if (err) throw err;
             var data = JSON.parse(body);
@@ -68,12 +93,38 @@ function index (callback) {
   });
 }
 
-module.exports = index;
+// Indexes all semesters we care about, returns a hash of those.
+function run (callback) {
+  var semesters = autocomplete.calcSemesters(new Date().getMonth(), new Date().getFullYear());
+  var dbg = new EventEmitter();
+
+  var jobs = cross.for(semesters, campuses, ['G', 'U'], function (sem, campus, level) { 
+    return function (callback) {
+      index(sem, campus, level, function (err, data) {
+        dbg.emit('debug', 'Done indexing ' + sem + ' ' + campus + ' ' + level);
+        callback(err, {filename: 'indexes/' + sem + "_" + campus + "_" + level + ".json", data: data});
+      });
+    };
+  });
+
+  async.parallel(jobs, callback);
+  return dbg;
+}
+
+module.exports = run;
+run.index = index;
+
 
 if (require.main === module) {
-  index(function (err, data) {
+  var emitter = run(function (err, data) {
     if (err) console.log(err.stack);
-    else console.log(JSON.stringify(data));
+    else {
+      _.each(data, function (item) {
+        console.log('writing to ' + item.filename);
+        fs.writeFile(item.filename, JSON.stringify(item.data));
+      });
+    }
   });
+  emitter.on('debug', function (msg) { console.log(msg); });
 }
 

@@ -1,5 +1,28 @@
 var _ = require('lodash');
 
+// Takes the current month and year and produces a list of semesters we're
+// interested in
+function calcSemesters (month, year) {
+  var semesters, nextYear = String(parseInt(year, 10) + 1);
+
+  // This is probably the simplest way to represent this
+  if (month == 0) // Jan: winter, spring, summer
+    semesters = ['0' + year, '1' + year, '7' + year];
+  else if (month <= 4) // Feb - May: Spr Sum F
+    semesters = ['1' + year, '7' + year, '9' + year];
+  else if (month <= 7) // Jun - Aug: Sum F W
+    semesters = ['7' + year, '9' + year, '0' + nextYear];
+  else if (month <= 10) // Sep - Nov: F W Spr
+    semesters = ['9' + year, '0' + nextYear, '1' + nextYear];
+  else // December
+    semesters = ['0' + nextYear, '1' + nextYear, '7' + nextYear];
+
+  return semesters;
+}
+
+autocomplete.calcSemesters = calcSemesters;
+
+// Runs an autocompletion search on the given index with the given query
 function autocomplete (index, query) {
   var reg, matches = [];
 
