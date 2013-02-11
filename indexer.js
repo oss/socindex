@@ -7,9 +7,11 @@ var autocomplete = require('./autocomplete');
 var EventEmitter = require('events').EventEmitter;
 var cross = require('./cross');
 
-//var url = "http://sis.rutgers.edu/soc/subjects.json?semester=12013&campus=NB&level=U";
-var url = "http://sis.rutgers.edu/soc/subjects.json?semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
-var subj = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
+var subjectsBase = "http://sis.rutgers.edu/soc/subjects.json?semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
+var coursesBase = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
+
+var onlineSubjectsBase = "http://sis.rutgers.edu/soc/onlineSubjects.json?term=$TERM&year=$YEAR&level=$LEVEL";
+var onlineCoursesBase = "http://sis.rutgers.edu/soc/onlineCourses.json?term=$TERM&year=$YEAR&level=$LEVEL&subject=$SUBJ";
 
 // Number is the month they start in
 //  winter: 0
@@ -17,7 +19,7 @@ var subj = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=$SEME
 //  summer: 7
 //  fall: 9
 
-var campuses = ['NB', 'NK', 'CM', 'ONLINE', 'WM', 'AC', 'MC', 'J', 'RV', 'CC', 'CU'];
+var campuses = ['NB', 'NK', 'CM', 'WM', 'AC', 'MC', 'J', 'RV', 'CC', 'CU', 'ONLINE'];
 
 function titleToAbbrev (title) {
   return title.split(' ').reduce(function (memo, item) {
@@ -40,25 +42,51 @@ function capitalize (text) {
 }
 
 function index (semester, campus, level, callback) {
-  var myUrl = url
-    .replace('$SEMESTER', semester) 
-    .replace('$CAMPUS', campus)
-    .replace('$LEVEL', level);
+  var myUrl;
+
+  // Online courses request a different URL for some reason
+  if (campus == 'ONLINE') {
+    myUrl = onlineSubjectsBase
+      .replace('$TERM', semester.slice(0, 1)) 
+      .replace('$YEAR', semester.slice(1)) 
+      .replace('$CAMPUS', campus)
+      .replace('$LEVEL', level);
+  }
+
+  else {
+    myUrl = subjectsBase
+      .replace('$SEMESTER', semester) 
+      .replace('$CAMPUS', campus)
+      .replace('$LEVEL', level);
+  }
+
 
   request(myUrl, function (err, res, body) {
-    console.log("Retrieved:", myUrl);
     try {
       if (err) throw err;
       var data = JSON.parse(body);
       var base = {ids: {}, names: {}, abbrevs: {}, courses: {}};
 
       async.reduce(data, base, function (memo, item, callback) {
+        var subjUrl;
         
-        var subjUrl = subj
-          .replace('$SEMESTER', semester) 
-          .replace('$CAMPUS', campus)
-          .replace('$LEVEL', level)
-          .replace('$SUBJ', item.code);
+        // Online courses request a different URL for some reason
+        if (campus == 'ONLINE') {
+          subjUrl = onlineCoursesBase
+            .replace('$TERM', semester.slice(0, 1)) 
+            .replace('$YEAR', semester.slice(1)) 
+            .replace('$CAMPUS', campus)
+            .replace('$LEVEL', level)
+            .replace('$SUBJ', item.code);
+        }
+
+        else {
+          subjUrl = coursesBase
+            .replace('$SEMESTER', semester) 
+            .replace('$CAMPUS', campus)
+            .replace('$LEVEL', level)
+            .replace('$SUBJ', item.code);
+        }
 
         request(subjUrl, function (err, res, body) {
           try {
