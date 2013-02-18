@@ -126,14 +126,20 @@ function run (callback) {
   var semesters = autocomplete.calcSemesters(new Date().getMonth(), new Date().getFullYear());
   var dbg = new EventEmitter();
 
-  var jobs = cross.for(semesters, campuses, ['G', 'U'], function (sem, campus, level) { 
-    return function (callback) {
-      index(sem, campus, level, function (err, data) {
-        dbg.emit('debug', 'Done indexing ' + sem + ' ' + campus + ' ' + level);
-        callback(err, {filename: 'indexes/' + sem + "_" + campus + "_" + level + ".json", data: data});
-      });
-    };
-  });
+  // create a job for each combination of semester, campus, and level of study
+  var jobs = cross.for(
+    semesters, 
+    campuses, 
+    ['G', 'U'], 
+    function (sem, campus, level) { 
+      return function (callback) {
+        index(sem, campus, level, function (err, data) {
+          dbg.emit('debug', 'Done indexing ' + sem + ' ' + campus + ' ' + level);
+          callback(err, {filename: 'indexes/' + sem + "_" + campus + "_" + level + ".json", data: data});
+        });
+      };
+    }
+  );
 
   async.parallel(jobs, callback);
   return dbg;
