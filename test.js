@@ -1,7 +1,6 @@
 var indexer = require('./indexer');
 var autocomplete = require('./autocomplete');
 var assert = require("assert");
-var moment = require('moment');
 
 describe('calcSemesters', function () {
 
