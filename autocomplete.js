@@ -80,7 +80,7 @@ function autocomplete (index, query) {
   // kindof hacky but supports input like 198:111
   if (query.indexOf(':') != -1) {
     var nums = query.split(':');
-    if (tryNumber(nums[0]) && tryNumber(nums[1])) {
+    if (tryNumber(nums[0])) {
       queryItems = [nums[0], nums[1]];
     }
   }
