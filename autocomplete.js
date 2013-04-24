@@ -61,6 +61,12 @@ function fuzzy (data, query, extractor) {
   });
 }
 
+function tryNumber (str) {
+  var num = parseInt(str, 10);
+  if (num.toString() === str && str.length === 3) return num;
+  else return false;
+}
+
 // Runs an autocompletion search on the given index with the given query
 function autocomplete (index, query) {
   var reg, matches = [];
@@ -68,29 +74,44 @@ function autocomplete (index, query) {
   query = query.trim();
   var queryItems = query.split(' ');
 
+  // kindof hacky but supports input like 198:111
+  if (query.indexOf(':') != -1) {
+    var nums = query.split(':');
+    if (tryNumber(nums[0]) && tryNumber(nums[1])) {
+      queryItems = [nums[0], nums[1]];
+    }
+  }
+
   // If the last token looks like a number and is the right length, don't use it
   // when looking for subjects because its probably a courseno
 
+  // Also, if queryItems.length is 1 then this is a subjno, not a courseno
+
   var courseno = queryItems[queryItems.length - 1];
-  if (Number(courseno).toString() == courseno && courseno.length == 3) {
+  if (tryNumber(courseno) && queryItems.length > 1) {
     queryItems.pop();
     query = queryItems.join(' ');
   } else courseno = null;
+
+  var subjno = queryItems[0];
+  if (tryNumber(subjno)) {
+    if (index.ids[subjno]) matches.push({subj: subjno});
+  }
 
   // fuzzy search of subject names
   if (query.length > 2) {
     var temp = fuzzy(index.names, query);
 
-    matches = _.map(temp, function (item) {
+    matches = matches.concat(_.map(temp, function (item) {
       return {subj: item};
-    }).concat(matches);
+    }));
   } 
 
-  // Search course abbreviations
+  // Search subject abbreviations
   if (index.abbrevs[query.toUpperCase()]) {
-    matches = _.map(index.abbrevs[query.toUpperCase()], function (id) {
+    matches = matches.concat(_.map(index.abbrevs[query.toUpperCase()], function (id) {
       return {subj: id};
-    }).concat(matches);
+    }));
   }
 
   // if we have a courseno try to locate it in the subjects we found
