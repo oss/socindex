@@ -63,7 +63,10 @@ function fuzzy (data, query, extractor) {
 
 function tryNumber (str) {
   var num = parseInt(str, 10);
-  if (num.toString() === str && str.length === 3) return num;
+  var hack = str;
+  // nasty hack for supporting numbers with a leading 0
+  if (str[0] == "0") hack = str.slice(1);
+  if (num.toString() === hack && str.length === 3) return num;
   else return false;
 }
 
