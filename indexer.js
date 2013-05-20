@@ -2,10 +2,11 @@ var request = require('request');
 var async = require('async');
 var _ = require('lodash');
 var fs = require('fs');
-var moment = require('moment');
 var autocomplete = require('./autocomplete');
 var EventEmitter = require('events').EventEmitter;
 var cross = require('./cross');
+
+var capitalize = autocomplete.capitalize;
 
 var subjectsBase = "http://sis.rutgers.edu/soc/subjects.json?semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
 var coursesBase = "http://sis.rutgers.edu/soc/courses.json?subject=$SUBJ&semester=$SEMESTER&campus=$CAMPUS&level=$LEVEL";
@@ -26,19 +27,6 @@ function titleToAbbrev (title) {
     if (item != 'and') return memo + item[0];
     else return memo;
   }, "");
-}
-
-function capitalize (text) {
-  return text.trim().toLowerCase().split(' ').map(function (item) {
-    if (item == 'ii' || item == 'i' || item == 'iii' || item == 'iv') return item.toUpperCase();
-
-    // TODO: about a million other english oddities and other edge cases
-
-    if (item != 'and') {
-      if (item) return item[0].toUpperCase() + item.slice(1);
-      else return '';
-    } else return item;
-  }).join(' ');
 }
 
 function index (semester, campus, level, callback) {
