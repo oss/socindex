@@ -135,7 +135,7 @@ function run (callback) {
       return function (callback) {
         index(sem, campus, level, function (err, data) {
           dbg.emit('debug', 'Done indexing ' + sem + ' ' + campus + ' ' + level);
-          callback(err, {filename: 'indexes/' + sem + "_" + campus + "_" + level + ".json", data: data});
+          callback(err, {filename: sem + "_" + campus + "_" + level + ".json", data: data});
         });
       };
     }
