@@ -143,7 +143,7 @@ if (require.main === module) {
     else {
       _.each(data, function (item) {
         console.log('writing to ' + item.filename);
-        fs.writeFile(item.filename, JSON.stringify(item.data));
+        fs.writeFile("indexes/" + item.filename, JSON.stringify(item.data));
       });
     }
   });
